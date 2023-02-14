@@ -1,60 +1,104 @@
-import React, { useState, useRef, useEffect} from 'react'
-import TodoList from './TodoList';
-// import uuidv4 from 'uuid/v4'
+import {useState} from 'react';
+import AddTaskForm from './components/AddTaskForm.jsx'
+import UpdateForm from './components/UpdateForm'
+import ToDo from './components/ToDo.jsx'
 
-const LOCAL_STORAGE_KEY = 'todoApp.todos'
+import 'bootstrap/dist/css/bootstrap.min.css'
 
+import './App.css';
 
 function App() {
+const [toDo, setToDo] = useState([]);
 
-  const [todos, setTodos] = useState([ ])
-  const todoNameRef = useRef()
+const [newTask, setNewTask] = useState('');
+const [updateData, setUpdateData] = useState('');
 
-    useEffect(() => {
-      const storedTodos = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY))
-      if (storedTodos) setTodos(storedTodos)
-    }, [])
+// addTask
+const addTask = () => {
+  if(newTask) {
+    let num = toDo.length + 1;
+    let newEntry = { id: num, title: newTask, status: false }
+    setToDo([...toDo, newEntry])
+    setNewTask('');
+  }
+}
 
+//deleteTask
+const deleteTask = (id) => {
+  let newTasks = toDo.filter( task => task.id !== id)
+  setToDo(newTask);
+//this-----------^ is plural in video
+}
 
-    useEffect(() => {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify (todos))
-
-    },[todos])
-
-    function toggleTodo(id) {
-      const newTodos = [...todos]
-      const todo = newTodos.find(todo => todo.id === id)
-      todo.complete = !todo.complete
-      setTodos(newTodos)
+// markDone
+const markDone = (id) => {
+  let newTask = toDo.map( task => {
+    if( task.id === id ) {
+      return ({ ...task, status: !task.status })
     }
+    return task;
+  })
+  setToDo(newTask);
+}
 
-    function handleAddTodo(e) {
-      const name = todoNameRef.current.value
-      if (name === '') return
-      setTodos(prevTodos => {
-        return [...prevTodos, { id: 1, name: name, complete: false}]
+//cancelUpdate
+const cancelUpdate = () => {
+  setUpdateData('');
+}
 
-      })
-      todoNameRef.current.value = null
-    }
+//changeTask
+const changeTask = (e) => {
+  let newEntry = {
+    id: updateData.id,
+    title: e.target.value,
+    status: updateData.status ? true : false
+  }
+  setUpdateData(newEntry);
+}
 
-    function handleClearTodos() {
+//updateTask
+const updateTask = () => {
+  let filterRecords = [...toDo].filter( task => task.id !== updateData.id );
+  let updatedObject = [...filterRecords, updateData]
+  setToDo(updatedObject);
+  setUpdateData('');
+}
 
-      const newTodos = todos.filter(todo => !todo.complete)
-      setTodos(newTodos)
+return (
+<div className="container_app">
+  <br /><br />
+  <h2>ToDo List</h2>
+  <br /><br />
 
-    }
+  {updateData && updateData ? (
 
-    return (
-    <>
-      <TodoList todos={todos} toggleTodo={toggleTodo}/>
-      <input ref={todoNameRef}type="text" />
-      <button onClick={handleAddTodo}> Add Todo </button>
-      <button onClick={handleClearTodos}>Clear Completed todos</button>
-      <div>{todos.filter(todo => !todo.complete).length} left to do</div>
-    </>
-    )
+    <UpdateForm
+      updateData={updateData}
+      updateTask={updateTask}
+      cancelUpdate={cancelUpdate}
+      changeTask={changeTask}
+    />
+
+  ) : (
+
+    <AddTaskForm
+        newTask={newTask}
+        setNewTask={setNewTask}
+        addTask={addTask}
+    />
+  )}
+
+  {toDo && toDo.length ? '' : 'No Tasks...'}
+    <ToDo
+      toDo={toDo}
+      markDone={markDone}
+      setUpdateData={setUpdateData}
+      deleteTask={deleteTask}
+    />
   
+</div>
+
+);
 }
 
 export default App;
